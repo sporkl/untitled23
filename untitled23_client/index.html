@@ -11,11 +11,33 @@
 </head>
 <body>
   <div class="container">
-    <h1>(Page name)</h1>
-
-    (content)
-
-    <hr/>
+		<p id="zoom">Zoom: 1.0</p>
+		<div class="row">
+			<div class="col">
+				<button class="button primary" onclick="sendIncrZoom()">+</a>
+			</div>
+			<div class="col">
+				<buttpn class="button primary" onclick="sendDecrZoom()">-</a>
+			</div>
+		</div>
+		<p id="start_pos">Start: 0.0</p>
+		<div class="row">
+			<div class="col">
+				<button class="button primary" onclick="sendIncrStart()">+</a>
+			</div>
+			<div class="col">
+				<button class="button primary" onclick="sendDecrStart()">-</a>
+			</div>
+		</div>
+		<p id="end_pos">End: 0.0</p>
+		<div class="row">
+			<div class="col">
+				<button class="button primary" onclick="sendIncrEnd()">+</a>
+			</div>
+			<div class="col">
+				<button class="button primary" onclick="sendDecrEnd()">-</a>
+			</div>
+		</div>
   </div>
 </body>
 </html>

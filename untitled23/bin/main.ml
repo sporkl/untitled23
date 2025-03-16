@@ -7,10 +7,25 @@ let zoom = Atomic.make_contended 1
 
 let send_updates wsd () =
   while not (Ws.Descriptor.is_closed wsd) do
-    Ws.Descriptor.send_string wsd ("/u23_client/start_pos " ^ (string_of_int @@ Atomic.get start_pos));
-    Ws.Descriptor.send_string wsd ("/u23_client/end_pos " ^ (string_of_int @@ Atomic.get end_pos));
-    Ws.Descriptor.send_string wsd ("/u23_client/zoom " ^ (string_of_int @@ Atomic.get zoom));
+    let zoom_str = string_of_int @@ Atomic.get zoom in
+    let start_pos_str = string_of_int @@ Atomic.get start_pos in
+    let end_pos_str = string_of_int @@ Atomic.get end_pos in
+    let json_string = String.concat "" [
+      {|{"start_pos":|}
+    ; start_pos_str
+    ; {|,"end_pos":|}
+    ; end_pos_str
+    ; {|,"zoom":|}
+    ; zoom_str
+    ; {|}|}
+    ]
+    in
+    Ws.Descriptor.send_string wsd json_string;
     Eio_unix.sleep 0.1;
+(*     Ws.Descriptor.send_string wsd ("/u23_client/start_pos " ^ (string_of_int @@ Atomic.get start_pos)); *)
+(*     Ws.Descriptor.send_string wsd ("/u23_client/end_pos " ^ (string_of_int @@ Atomic.get end_pos)); *)
+(*     Ws.Descriptor.send_string wsd ("/u23_client/zoom " ^ (string_of_int @@ Atomic.get zoom)); *)
+    (* Eio_unix.sleep 0.1; *)
   done
 
 let handle_message (_opcode, {IOVec.buffer; off; len}) =
