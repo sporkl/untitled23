@@ -1,15 +1,24 @@
 open Eio.Std
 open Piaf
 
-let start_pos = Atomic.make_contended 0
-let end_pos = Atomic.make_contended 0
-let zoom = Atomic.make_contended 1
+let start_pos = Atomic.make_contended 0 (* between 0 and 1000, actual value between 0.0 and 1.0, increments by 0.001 *)
+let end_pos = Atomic.make_contended 0 (* between 0 and 1000 *)
+let zoom = Atomic.make_contended 1 (* between 0 and 3000, actual value betwen 0.0 and 30.0, increments by 0.01 *)
+
+let atomic_get_clip_range a lo hi =
+  let v = Atomic.get a in
+  if v < lo then
+    (Atomic.set a lo; lo)
+  else if v > hi then
+    (Atomic.set a hi; hi)
+  else
+    v
 
 let send_updates wsd () =
   while not (Ws.Descriptor.is_closed wsd) do
-    let zoom_str = string_of_int @@ Atomic.get zoom in
-    let start_pos_str = string_of_int @@ Atomic.get start_pos in
-    let end_pos_str = string_of_int @@ Atomic.get end_pos in
+    let zoom_str = string_of_int @@ atomic_get_clip_range zoom 0 3000 in
+    let start_pos_str = string_of_int @@ atomic_get_clip_range start_pos 0 1000 in
+    let end_pos_str = string_of_int @@ atomic_get_clip_range end_pos 0 1000 in
     let json_string = String.concat "" [
       {|{"start_pos":|}
     ; start_pos_str

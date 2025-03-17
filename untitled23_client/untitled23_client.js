@@ -6,9 +6,9 @@ let ws = new WebSocket("ws://localhost:8080");
 
 function receiveMessage(event) {
 	data=JSON.parse(event.data);
-	document.getElementById("zoom").textContent = "Zoom: " + data.zoom;
-	document.getElementById("start_pos").textContent = "Start: " + data.start_pos;
-	document.getElementById("end_pos").textContent = "End: " + data.end_pos;
+	document.getElementById("zoom").textContent = "Zoom: " + (data.zoom / 100).toFixed(2);
+	document.getElementById("start_pos").textContent = "Start: " + (data.start_pos / 1000).toFixed(3);
+	document.getElementById("end_pos").textContent = "End: " + (data.end_pos / 1000).toFixed(3);
 }
 
 ws.onmessage = receiveMessage;
