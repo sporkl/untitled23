@@ -3,7 +3,7 @@ open Piaf
 
 let start_pos = Atomic.make_contended 0 (* between 0 and 1000, actual value between 0.0 and 1.0, increments by 0.001 *)
 let end_pos = Atomic.make_contended 0 (* between 0 and 1000 *)
-let zoom = Atomic.make_contended 1 (* between 0 and 3000, actual value betwen 0.0 and 30.0, increments by 0.01 *)
+let zoom = Atomic.make_contended 5 (* between 0 and 300, actual value betwen 0.0 and 30.0, increments by 0.1 *)
 
 let atomic_get_clip_range a lo hi =
   let v = Atomic.get a in
@@ -31,10 +31,6 @@ let send_updates wsd () =
     in
     Ws.Descriptor.send_string wsd json_string;
     Eio_unix.sleep 0.1;
-(*     Ws.Descriptor.send_string wsd ("/u23_client/start_pos " ^ (string_of_int @@ Atomic.get start_pos)); *)
-(*     Ws.Descriptor.send_string wsd ("/u23_client/end_pos " ^ (string_of_int @@ Atomic.get end_pos)); *)
-(*     Ws.Descriptor.send_string wsd ("/u23_client/zoom " ^ (string_of_int @@ Atomic.get zoom)); *)
-    (* Eio_unix.sleep 0.1; *)
   done
 
 let handle_message (_opcode, {IOVec.buffer; off; len}) =
