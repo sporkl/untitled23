@@ -1,1 +1,16 @@
 @import url("sporkl-css/sporkl.css");
+
+@font-face {
+	font-family: "lato";
+	src: url("latoregular.ttf"), url("latoregular.woff");
+	font-weight: normal;
+	font-style: normal
+}
+
+:root {
+  --font-family-sans: "lato", sans-serif;
+}
+
+body {
+	touch-action: manipulation;
+}

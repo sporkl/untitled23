@@ -40,6 +40,26 @@
 				<button class="button primary" onclick="sendIncrEnd()"><h3 class="is-marginless">+</h3></a>
 				<button class="button primary" onclick="sendDecrEnd()"><h3 class="is-marginless">-</h3></a>
 			</div>
+			<br>
+			<h2 id="slider" class="is-center is-marginless">Narrow range</h3>
+			<br>
+			<div class="grouped is-center">
+				<input type="range" min="0" max="100" value="0" class="slider" oninput="setNarrowIntensity(this.value/100)">
+			</div>
+			<br>
+			<h2 id="ending" class="is-center is-marginless">Force end?</h3>
+			<br>
+			<div class="grouped is-center">
+				<button class="button primary" onclick="sendEndingTrue()"><h3 class="is-marginless">Yes</h3></a>
+				<button class="button primary" onclick="sendEndingFalse()"><h3 class="is-marginless">No</h3></a>
+			</div>
+			<br>
+			<h2 id="silence" class="is-center is-marginless">Commence silence?</h3>
+			<br>
+			<div class="grouped is-center">
+				<button class="button primary" onclick="sendSilenceTrue()"><h3 class="is-marginless">Yes</h3></a>
+				<button class="button primary" onclick="sendSilenceFalse()"><h3 class="is-marginless">No</h3></a>
+			</div>
 		</div>
   </div>
 </body>

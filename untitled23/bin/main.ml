@@ -2,8 +2,10 @@ open Eio.Std
 open Piaf
 
 let start_pos = Atomic.make_contended 0 (* between 0 and 1000, actual value between 0.0 and 1.0, increments by 0.001 *)
-let end_pos = Atomic.make_contended 0 (* between 0 and 1000 *)
-let zoom = Atomic.make_contended 5 (* between 0 and 300, actual value betwen 0.0 and 30.0, increments by 0.1 *)
+let end_pos = Atomic.make_contended 1000 (* between 0 and 1000 *)
+let zoom = Atomic.make_contended 30 (* between 0 and 300, actual value betwen 0.0 and 30.0, increments by 0.1 *)
+let ending = Atomic.make_contended false
+let silence = Atomic.make_contended false
 
 let atomic_get_clip_range a lo hi =
   let v = Atomic.get a in
@@ -16,9 +18,10 @@ let atomic_get_clip_range a lo hi =
 
 let send_updates wsd () =
   while not (Ws.Descriptor.is_closed wsd) do
-    let zoom_str = string_of_int @@ atomic_get_clip_range zoom 0 3000 in
+    let zoom_str = string_of_int @@ atomic_get_clip_range zoom 1 300 in
     let start_pos_str = string_of_int @@ atomic_get_clip_range start_pos 0 1000 in
     let end_pos_str = string_of_int @@ atomic_get_clip_range end_pos 0 1000 in
+    let silence_str = if (Atomic.get silence) then "true" else "false" in
     let json_string = String.concat "" [
       {|{"start_pos":|}
     ; start_pos_str
@@ -26,6 +29,8 @@ let send_updates wsd () =
     ; end_pos_str
     ; {|,"zoom":|}
     ; zoom_str
+    ; {|,"silence":|}
+    ; silence_str
     ; {|}|}
     ]
     in
@@ -36,11 +41,15 @@ let send_updates wsd () =
 let handle_message (_opcode, {IOVec.buffer; off; len}) =
   match Bigstringaf.substring ~off ~len buffer with
   | "/u23/start_pos/incr" -> Atomic.incr start_pos
-  | "/u23/start_pos/decr" -> Atomic.decr start_pos
+  | "/u23/start_pos/decr" -> (if (Atomic.get ending) then Atomic.incr else Atomic.decr) start_pos
   | "/u23/end_pos/incr" -> Atomic.incr end_pos
-  | "/u23/end_pos/decr" -> Atomic.decr end_pos
-  | "/u23/zoom/incr" -> Atomic.incr zoom
+  | "/u23/end_pos/decr" -> (if (Atomic.get ending) then Atomic.incr else Atomic.decr) end_pos
+  | "/u23/zoom/incr" -> (if (Atomic.get ending) then Atomic.decr else Atomic.incr) zoom
   | "/u23/zoom/decr" -> Atomic.decr zoom
+  | "/u23/ending/true" -> Atomic.set ending true
+  | "/u23/ending/false" -> Atomic.set ending false
+  | "/u23/silence/true" -> Atomic.set silence true
+  | "/u23/silence/false" -> Atomic.set silence false
   | _ -> ()
 
 let receive_updates wsd () =
