@@ -6,12 +6,18 @@ let zoom = 3.0;
 let narrow_intensity = 0.0;
 let silence = false;
 
+const numPoses = 10;
+
 function randomRange(min, max, skew = 1) {
 	return ((Math.random() ** (1 / skew)) * (max - min)) + min;
 }
 
+function genPos() {
+	return randomRange(0, 1);
+}
+
 function genGrainGain() {
-	return randomRange(0.01, 1);
+	return randomRange(0.001, 0.1);
 }
 
 function genPlaybackRate() {
@@ -22,10 +28,18 @@ function genChopperRate() {
 	return randomRange(3, 8);
 }
 
-let between_poses = [randomRange(0, 1), randomRange(0, 1), randomRange(0, 1), randomRange(0, 1)].sort();
-let grain_gains = [0, genGrainGain(), genGrainGain(), genGrainGain(), genGrainGain(), 0];
-let playback_rates = [genPlaybackRate(), genPlaybackRate(), genPlaybackRate(), genPlaybackRate(), genPlaybackRate(), genPlaybackRate()];
-let chopper_rates = [genChopperRate(), genChopperRate(), genChopperRate(), genChopperRate(), genChopperRate(), genChopperRate()];
+function initArray(len, f) {
+	let a = [];
+	for (let i = 0; i < len; i++) {
+		a.push(f());
+	}
+	return a;
+}
+
+let between_poses = initArray(numPoses - 2, genPos).sort(); between_poses.unshift(0); between_poses.push(1);
+let grain_gains = initArray(numPoses - 2, genGrainGain); grain_gains.unshift(0); grain_gains.push(0);
+let playback_rates = initArray(numPoses, genPlaybackRate);
+let chopper_rates = initArray(numPoses, genChopperRate);
 
 let ws = new WebSocket("ws://localhost:8080");
 
@@ -135,57 +149,17 @@ function setNarrowIntensity(v) {
 
 // THE LOOP
 
-// generate 3 intermediate position numbers, and 5 numbers total
-// linear interpolate between the 5 numbers at the 3 positions
-// 5th number for gain should be 0
-
-// gets playback rate value at position p from 0 to 1
-function getPlaybackRate(p) {
-	if (p < between_poses[0]) {
-		return lerp(p, 0, between_poses[0], playback_rates[0], playback_rates[1]);
-	} else if ((between_poses[0] <= p) && (p < between_poses[1])) {
-		return lerp(p, between_poses[0], between_poses[1], playback_rates[1], playback_rates[2]);
-	} else if ((between_poses[1] <= p) && (p < between_poses[2])) {
-		return lerp(p, between_poses[1], between_poses[2], playback_rates[2], playback_rates[3]);
-	} else if ((between_poses[2] <= p) && (p < between_poses[3])) {
-		return lerp(p, between_poses[2], between_poses[3], playback_rates[3], playback_rates[4]);
-	} else if (p >= between_poses[3]) {
-		return lerp(p, between_poses[3], 1, playback_rates[4], playback_rates[5]);
-	}
-}
-
-// gets chopper rate value at position p from 0 to 1
-function getChopperRate(p) {
-	if (p < between_poses[0]) {
-		return lerp(p, 0, between_poses[0], chopper_rates[0], chopper_rates[1]);
-	} else if ((between_poses[0] <= p) && (p < between_poses[1])) {
-		return lerp(p, between_poses[0], between_poses[1], chopper_rates[1], chopper_rates[2]);
-	} else if ((between_poses[1] <= p) && (p < between_poses[2])) {
-		return lerp(p, between_poses[1], between_poses[2], chopper_rates[2], chopper_rates[3]);
-	} else if ((between_poses[2] <= p) && (p < between_poses[3])) {
-		return lerp(p, between_poses[2], between_poses[3], chopper_rates[3], chopper_rates[4]);
-	} else if (p >= between_poses[3]) {
-		return lerp(p, between_poses[3], 1, chopper_rates[4], chopper_rates[5]);
-	}
-}
-
-// gets final gain value at position p from 0 to 1
-function getGrainGain(p) {
-	if (p < between_poses[0]) {
-		return lerp(p, 0, between_poses[0], grain_gains[0], grain_gains[1]);
-	} else if ((between_poses[0] <= p) && (p < between_poses[1])) {
-		return lerp(p, between_poses[0], between_poses[1], grain_gains[1], grain_gains[2]);
-	} else if ((between_poses[1] <= p) && (p < between_poses[2])) {
-		return lerp(p, between_poses[1], between_poses[2], grain_gains[2], grain_gains[3]);
-	} else if ((between_poses[2] <= p) && (p < between_poses[3])) {
-		return lerp(p, between_poses[2], between_poses[3], grain_gains[3], grain_gains[4]);
-	} else if (p >= between_poses[3]) {
-		return lerp(p, between_poses[3], 1, grain_gains[4], grain_gains[5]);
-	}
-}
-
 function lerp(v, imin, imax, omin, omax) {
 	return (((v - imin) / (imax - imin)) * (omax - omin)) + omin;
+}
+
+function lerpList(v, ilist, olist) {
+	for (let i = 1; i < ilist.length - 1; i++) {
+		if (v < ilist[i]) {
+			return lerp(v, ilist[i-1], ilist[i], olist[i-1], olist[i]);
+		}
+	}
+	return lerp(v, ilist[ilist.length-2], ilist[ilist.length-1], olist[ilist.length-2], olist[ilist.length-1]);
 }
 
 function updateParameters() {
@@ -196,9 +170,9 @@ function updateParameters() {
 	let pos = lerp(timepos, 0, 1, start_pos, end_pos);
 
 	// get the playback, chopper, gain info and update those parameters
-	graingain.gain.value = getGrainGain(pos);
-	grain.playbackRate = getPlaybackRate(pos);
-	chopper.frequency = getChopperRate(pos);
+	graingain.gain.value = lerpList(pos, between_poses, grain_gains);
+	grain.playbackRate = lerpList(pos, between_poses, playback_rates);
+	chopper.frequency = lerpList(pos, between_poses, chopper_rates);
 
 	if (silence) {
 		finalgain.gain.value *= 0.995;
