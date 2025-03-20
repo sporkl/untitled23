@@ -17,7 +17,7 @@ function genPos() {
 }
 
 function genGrainGain() {
-	return randomRange(0.001, 0.1);
+	return randomRange(-40, 0);
 }
 
 function genPlaybackRate() {
@@ -37,14 +37,16 @@ function initArray(len, f) {
 }
 
 let between_poses = initArray(numPoses - 2, genPos).sort(); between_poses.unshift(0); between_poses.push(1);
-let grain_gains = initArray(numPoses - 2, genGrainGain); grain_gains.unshift(0); grain_gains.push(0);
+let grain_gains = initArray(numPoses - 2, genGrainGain); grain_gains.unshift(-999); grain_gains.push(-999);
 let playback_rates = initArray(numPoses, genPlaybackRate);
 let chopper_rates = initArray(numPoses, genChopperRate);
 
-let ws = new WebSocket("ws://localhost:8080");
+console.log(location.host);
+
+let ws = new WebSocket("ws://" + location.host + "/ws");
 
 const finalgain = new Tone.Gain(1).toDestination();
-const graingain = new Tone.Gain(1).connect(finalgain);
+const graingain = new Tone.Gain(1, "decibels").connect(finalgain);
 const chopgain = new Tone.Gain(1).connect(graingain);
 const pingergain = new Tone.Gain(0.1).connect(finalgain);
 

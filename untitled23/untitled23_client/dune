@@ -1,0 +1,16 @@
+(library
+  (name untitled23_client))
+
+(install
+ (section bin)
+ (files
+   (glob_files sporkl-css/*)
+   admin.html
+   ake_metalhit.wav
+   custom.css
+   index.html
+   latoregular.ttf
+   latoregular.woff
+   tibetan_bell.wav
+   tone.js
+   untitled23_client.js))

@@ -1,4 +1,4 @@
 (executable
  (public_name untitled23)
  (name main)
- (libraries untitled23 eio_main piaf))
+ (libraries eio_main piaf untitled23_client))

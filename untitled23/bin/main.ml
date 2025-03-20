@@ -57,14 +57,23 @@ let receive_updates wsd () =
   Stream.iter ~f:handle_message frames;
   Ws.Descriptor.close wsd
 
-let connection_handler (params : Request_info.t Server.ctx) =
+let websocket_connection_handler (params : Request_info.t Server.ctx) =
   Response.Upgrade.websocket params.request ~f:(fun wsd ->
     Fiber.both (send_updates wsd) (receive_updates wsd))
   |> Result.get_ok
 
+let connection_handler (params : Request_info.t Server.ctx) =
+  match params.request.target with
+  | "/ws" -> websocket_connection_handler params
+  | "/" -> Response.or_internal_error @@ Response.copy_file "index.html"
+  | tg ->
+      let f = String.sub tg 1 ((String.length tg) - 1) in
+      Response.or_internal_error @@ Response.copy_file f
+
 let start env =
   let host = Eio.Net.Ipaddr.V4.loopback in
-  let port = 8080 in
+  let port = 8000 in
+  Eio.Flow.copy_string ("Port: " ^ (string_of_int port) ^ "\n") (Eio.Stdenv.stdout env);
   Switch.run (fun sw ->
     let config =
       Server.Config.create

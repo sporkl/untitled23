@@ -1,0 +1,108 @@
+/* sporkl.css */
+
+/* imports, etc. */
+
+@import url("chota.css");
+
+@font-face {
+  font-family: "fjord";
+  src: url("fjordone.otf"), url("fjordone.woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "iosevka";
+  src: url("iosevka-fixed-slab-medium.otf"), url("iosevka-fixed-slab-medium.woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* css vars for chota/etc. */
+
+:root {
+    --color-light: #E6E1DC;
+    --color-dark: #2B2B2B;
+    --color-primary: #A6C166;
+    --url-color: #2693C1;
+    --font-size: 1.6rem; /* 12pt */
+    --font-family-sans: "fjord", serif;
+    --font-family-serif: "fjord", serif;
+    --font-family-mono: "iosevka", monospace;
+
+    --bg-color: var(--color-light);
+    --font-color: var(--color-dark);
+    --color-lightGrey: var(--color-light);
+    --color-darkGrey: var(--color-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+      --bg-color: var(--color-dark);
+      --font-color: var(--color-light);
+      --color-lightGrey: var(--color-dark);
+      --color-darkGrey: var(--color-light);
+    }
+}
+
+/* other customizations */
+
+body {
+  tab-size: 2;
+}
+
+a {
+  color: var(--url-color);
+  text-decoration: underline;
+}
+
+pre {
+  color: var(--bg-color);
+  background-color: var(--font-color);
+}
+
+code {
+  color: var(--bg-color);
+  background-color: var(--font-color);
+}
+
+hr {
+  background-color: var(--font-color);
+}
+
+ul {
+  list-style-type: "- ";
+  padding-left: 1em;
+}
+
+@counter-style paren-decimal {
+  system: extends decimal;
+  prefix: "(";
+  suffix: ") ";
+}
+
+ol {
+  list-style: paren-decimal;
+  padding-left: 2em;
+}
+
+.button.outline {
+  border-color: var(--color-darkGrey);
+}
+
+.button.dark, .button.error, .button.primary, .button.secondary, .button.success {
+  color: var(--font-color);
+}
+
+.tabs > a {
+  border-bottom-color: var(--color-darkGrey);
+}
+
+.tabs > a:hover {
+  border-bottom-color: var(--color-lightGrey);
+}
+
+.is-full-screen {
+  height: 100vh;
+  min-height: 100vh;
+}
