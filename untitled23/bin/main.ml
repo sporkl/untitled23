@@ -71,7 +71,7 @@ let connection_handler (params : Request_info.t Server.ctx) =
       Response.or_internal_error @@ Response.copy_file f
 
 let start env =
-  let host = Eio.Net.Ipaddr.V4.loopback in
+  let host = Eio.Net.Ipaddr.V4.any in
   let port = 8000 in
   Eio.Flow.copy_string ("Port: " ^ (string_of_int port) ^ "\n") (Eio.Stdenv.stdout env);
   Switch.run (fun sw ->
