@@ -4,7 +4,7 @@ let start_pos = 0.0;
 let end_pos = 1.0;
 let zoom = 3.0;
 let narrow_intensity = 0.0;
-let silence = false;
+let silence = 0;
 
 const numPoses = 10;
 
@@ -137,12 +137,16 @@ function sendEndingTrue() {
 	ws.send("/u23/ending/true");
 }
 
-function sendSilenceTrue() {
-	ws.send("/u23/silence/true");
+function sendSilenceTransition() {
+	ws.send("/u23/silence/1");
 }
 
 function sendSilenceFalse() {
-	ws.send("/u23/silence/false");
+	ws.send("/u23/silence/0");
+}
+
+function sendSilenceComplete() {
+	ws.send("/u23/silence/2");
 }
 
 function setNarrowIntensity(v) {
@@ -176,10 +180,12 @@ function updateParameters() {
 	grain.playbackRate = lerpList(pos, between_poses, playback_rates);
 	chopper.frequency = lerpList(pos, between_poses, chopper_rates);
 
-	if (silence) {
+	if (silence == 0) {
+		finalgain.gain.value = 1;
+	} else if (silence == 1) {
 		finalgain.gain.value *= 0.995;
 	} else {
-		finalgain.gain.value = 1;
+		finalgain.gain.value = 0;
 	}
 
 	if (Math.random() < narrow_intensity) {

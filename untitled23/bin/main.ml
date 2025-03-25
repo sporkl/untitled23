@@ -5,7 +5,7 @@ let start_pos = Atomic.make_contended 0 (* between 0 and 1000, actual value betw
 let end_pos = Atomic.make_contended 1000 (* between 0 and 1000 *)
 let zoom = Atomic.make_contended 30 (* between 0 and 300, actual value betwen 0.0 and 30.0, increments by 0.1 *)
 let ending = Atomic.make_contended false
-let silence = Atomic.make_contended false
+let silence = Atomic.make_contended 0
 
 let atomic_get_clip_range a lo hi =
   let v = Atomic.get a in
@@ -21,7 +21,7 @@ let send_updates wsd () =
     let zoom_str = string_of_int @@ atomic_get_clip_range zoom 1 300 in
     let start_pos_str = string_of_int @@ atomic_get_clip_range start_pos 0 1000 in
     let end_pos_str = string_of_int @@ atomic_get_clip_range end_pos 0 1000 in
-    let silence_str = if (Atomic.get silence) then "true" else "false" in
+    let silence_str = string_of_int @@ Atomic.get silence in
     let json_string = String.concat "" [
       {|{"start_pos":|}
     ; start_pos_str
@@ -48,8 +48,9 @@ let handle_message (_opcode, {IOVec.buffer; off; len}) =
   | "/u23/zoom/decr" -> Atomic.decr zoom
   | "/u23/ending/true" -> Atomic.set ending true
   | "/u23/ending/false" -> Atomic.set ending false
-  | "/u23/silence/true" -> Atomic.set silence true
-  | "/u23/silence/false" -> Atomic.set silence false
+  | "/u23/silence/0" -> Atomic.set silence 0
+  | "/u23/silence/1" -> Atomic.set silence 1
+  | "/u23/silence/2" -> Atomic.set silence 2
   | _ -> ()
 
 let receive_updates wsd () =
