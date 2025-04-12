@@ -8,6 +8,8 @@ let silence = 0;
 
 const numPoses = 10;
 
+const numSynths = 5;
+
 function randomRange(min, max, skew = 1) {
 	return ((Math.random() ** (1 / skew)) * (max - min)) + min;
 }
@@ -36,42 +38,74 @@ function initArray(len, f) {
 	return a;
 }
 
-let between_poses = initArray(numPoses - 2, genPos).sort(); between_poses.unshift(0); between_poses.push(1);
-let grain_gains = initArray(numPoses - 2, genGrainGain); grain_gains.unshift(-999); grain_gains.push(-999);
-let playback_rates = initArray(numPoses, genPlaybackRate);
-let chopper_rates = initArray(numPoses, genChopperRate);
+function randomChoice(a) {
+	return a[Math.floor(Math.random() * a.length)];
+}
 
-console.log(location.host);
+let finalgain = new Tone.Gain(1).toDestination();
 
-let ws = new WebSocket("ws://" + location.host + "/ws");
+// synth
 
-const finalgain = new Tone.Gain(1).toDestination();
-const graingain = new Tone.Gain(1, "decibels").connect(finalgain);
-const chopgain = new Tone.Gain(1).connect(graingain);
-const pingergain = new Tone.Gain(0.1).connect(finalgain);
+function Synth() {
+	this.between_poses = initArray(numPoses - 2, genPos).sort(); this.between_poses.unshift(0); this.between_poses.push(1);
+	this.grain_gains = initArray(numPoses - 2, genGrainGain); this.grain_gains.unshift(-999); this.grain_gains.push(-999);
+	this.playback_rates = initArray(numPoses, genPlaybackRate);
+	this.chopper_rates = initArray(numPoses, genChopperRate);
 
-const grain = new Tone.Player("ake_metalhit.wav").connect(chopgain);
-grain.autoplay = true;
-grain.loop = true;
-grain.playbackRate = 14; // from 4 to 9
+	this.graingain = new Tone.Gain(1, "decibels").connect(finalgain);
+	this.chopgain = new Tone.Gain(1).connect(this.graingain);
 
-const chopper = new Tone.LFO(3, 0, 1); // from 3 to 8
-chopper.connect(chopgain.gain);
+	this.grain = new Tone.Player("ake_metalhit.wav").connect(this.chopgain);
+	this.grain.autoplay = true;
+	this.grain.loop = true;
+	this.grain.playbackRate = 14; // from 4 to 9
 
-const pinger = new Tone.Sampler({
+	this.chopper = new Tone.LFO(3, 0, 1); // from 3 to 8
+	this.chopper.connect(this.chopgain.gain);
+
+	this.startAudio = () => {
+		this.chopper.start();
+		this.grain.start();
+	}
+
+}
+
+function initSynth() {
+	return new Synth();
+}
+
+let synths = initArray(numSynths, initSynth);
+
+// pinger
+
+const pingPitches = [
+	6547, 6582, 6622, 6698, 7863, 8026, 8230, 8451, 8470, 9332, 9360, 9553
+].map((x) => x / 3);
+
+let pingergain = new Tone.Gain(0.01).connect(finalgain);
+
+let pinger = new Tone.Sampler({
 	urls: {G6: "tibetan_bell.wav"},
 	baseUrl: ""
 }).connect(pingergain);
 
+function soundPing() {
+	pinger.triggerAttackRelease(randomChoice(pingPitches), 1);
+}
+
+
+let ws = new WebSocket("ws://" + location.host + "/ws");
+
 // CALLBACKS
+
 
 function startAudio() {
 	document.getElementById("modal").style.display = "none";
 	document.getElementById("interface").style.display = "block";
+
 	Tone.start();
-	chopper.start();
-	grain.start();
-	soundPing();
+
+	synths.forEach((s) => {s.startAudio()});
 }
 
 function receiveMessage(m) {
@@ -86,18 +120,6 @@ function receiveMessage(m) {
 }
 
 ws.onmessage = receiveMessage;
-
-function randomChoice(a) {
-	return a[Math.floor(Math.random() * a.length)];
-}
-
-const pingPitches = [
-	6547, 6582, 6622, 6698, 7863, 8026, 8230, 8451, 8470, 9332, 9360, 9553
-].map((x) => x / 3);
-
-function soundPing() {
-	pinger.triggerAttackRelease(randomChoice(pingPitches), 1);
-}
 
 function sendIncrZoom() {
 	ws.send("/u23/zoom/incr");
@@ -175,10 +197,12 @@ function updateParameters() {
 	// convert that time to be within the current start and end
 	let pos = lerp(timepos, 0, 1, start_pos, end_pos);
 
-	// get the playback, chopper, gain info and update those parameters
-	graingain.gain.value = lerpList(pos, between_poses, grain_gains);
-	grain.playbackRate = lerpList(pos, between_poses, playback_rates);
-	chopper.frequency = lerpList(pos, between_poses, chopper_rates);
+	synths.forEach((s) => {
+		// get the playback, chopper, gain info and update those parameters
+		s.graingain.gain.value = lerpList(pos, s.between_poses, s.grain_gains);
+		s.grain.playbackRate = lerpList(pos, s.between_poses, s.playback_rates);
+		s.chopper.frequency = lerpList(pos, s.between_poses, s.chopper_rates);
+	});
 
 	if (silence == 0) {
 		finalgain.gain.value = 1;
