@@ -1,2 +1,4 @@
-untitled23/_build
-untitled23/_export
+_build
+_export
+.DS_Store
+._*
