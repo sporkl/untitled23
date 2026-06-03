@@ -1,6 +1,28 @@
 open Eio.Std
 open Piaf
 
+(* files to serve *)
+
+let read_file filename =
+  let f = open_in filename in
+  let s = really_input_string f (in_channel_length f) in
+  close_in f;
+  s
+
+let admin_html = read_file "admin.html"
+let ake_metalhit_wav = read_file "ake_metalhit.wav"
+let custom_css = read_file "custom.css"
+let index_html = read_file "index.html"
+let latoregular_ttf = read_file "latoregular.ttf"
+let latoregular_woff = read_file "latoregular.woff"
+let tibetan_bell_wav = read_file "tibetan_bell.wav"
+let tone_js = read_file "tone.js"
+let untitled23_client_js = read_file "untitled23_client.js"
+let sporkl_css_chota_css = read_file "sporkl-css/chota.css"
+let sporkl_css_sporkl_css = read_file "sporkl-css/sporkl.css"
+
+(* code *)
+
 let start_pos = Atomic.make_contended 0 (* between 0 and 1000, actual value between 0.0 and 1.0, increments by 0.001 *)
 let end_pos = Atomic.make_contended 1000 (* between 0 and 1000 *)
 let zoom = Atomic.make_contended 30 (* between 0 and 300, actual value betwen 0.0 and 30.0, increments by 0.1 *)
@@ -66,10 +88,20 @@ let websocket_connection_handler (params : Request_info.t Server.ctx) =
 let connection_handler (params : Request_info.t Server.ctx) =
   match params.request.target with
   | "/ws" -> websocket_connection_handler params
-  | "/" -> Response.or_internal_error @@ Response.copy_file "index.html"
-  | tg ->
-      let f = String.sub tg 1 ((String.length tg) - 1) in
-      Response.or_internal_error @@ Response.copy_file f
+  | "/admin.html" -> Response.of_string ~body:admin_html `OK
+  | "/ake_metalhit.wav" -> Response.of_string ~body:ake_metalhit_wav `OK
+  | "/custom.css" -> Response.of_string ~body:custom_css `OK
+  | "/index.html" | "/" -> Response.of_string ~body:index_html `OK
+  | "/latoregular.ttf" -> Response.of_string ~body:latoregular_ttf `OK
+  | "/latoregular.woff" -> Response.of_string ~body:latoregular_woff `OK
+  | "/tibetan_bell.wav" -> Response.of_string ~body:tibetan_bell_wav `OK
+  | "/tone.js" -> Response.of_string ~body:tone_js `OK
+  | "/untitled23_client.js" -> Response.of_string ~body:untitled23_client_js `OK
+  | "/sporkl-css/chota.css" -> Response.of_string ~body:sporkl_css_chota_css `OK
+  | "/sporkl-css/sporkl.css" -> Response.of_string ~body:sporkl_css_sporkl_css `OK
+  | _ -> Response.create `Not_found
+
+(* GO FORM DEFINE connection_handler *)
 
 let start env =
   let host = Eio.Net.Ipaddr.V4.any in
@@ -83,7 +115,6 @@ let start env =
     in
     let server = Server.create ~config connection_handler in
     ignore (Server.Command.start ~sw env server))
-
 
 let () =
   Eio_main.run start
