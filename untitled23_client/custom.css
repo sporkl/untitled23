@@ -11,6 +11,11 @@
   --font-family-sans: "lato", sans-serif;
 }
 
+#visualizer {
+	width: 100%;
+	height: 2em;
+}
+
 body {
 	touch-action: manipulation;
 }

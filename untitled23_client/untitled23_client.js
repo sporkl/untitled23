@@ -98,7 +98,6 @@ let ws = new WebSocket("ws://" + location.host + "/ws");
 
 // CALLBACKS
 
-
 function startAudio() {
 	document.getElementById("modal").style.display = "none";
 	document.getElementById("interface").style.display = "block";
@@ -238,4 +237,58 @@ function updateParameters() {
 	setTimeout(updateParameters, 10);
 }
 
+function updateVisualization(timestamp) {
+	
+	// find position from 0 to 1 based on current time and zoom
+	let timepos = ((Date.now() / 1000) % zoom) / zoom;
+	
+	// convert that time to be within the current start and end
+	let pos = lerp(timepos, 0, 1, start_pos, end_pos);
+
+	// update the visualization
+	let visualizer = document.getElementById("visualizer").getContext("2d");
+	let bgColor = window.getComputedStyle(document.body).getPropertyValue("--bg-color");
+	let fgColor = window.getComputedStyle(document.body).getPropertyValue("--font-color");
+	let accentColor = window.getComputedStyle(document.body).getPropertyValue("--color-primary");
+
+	// clear
+	visualizer.clearRect(0, 0, 1000, 100);
+
+	visualizer.lineWidth = 4;
+	
+	// draw the line
+	visualizer.beginPath();
+	visualizer.moveTo(0, 50);
+	visualizer.strokeStyle = fgColor;
+	visualizer.lineTo(1000, 50);
+	visualizer.stroke();
+
+	// draw the start
+	let startX = Math.round(start_pos * 1000);
+	visualizer.beginPath();
+	visualizer.moveTo(startX, 0);
+	visualizer.strokeStyle = fgColor;
+	visualizer.lineTo(startX, 100);
+	visualizer.stroke();
+	
+	// draw the end
+	let endX = Math.round(end_pos * 1000);
+	visualizer.beginPath();
+	visualizer.moveTo(endX, 0);
+	visualizer.strokeStyle = fgColor;
+	visualizer.lineTo(endX, 100);
+	visualizer.stroke();
+	
+	// draw current position
+	let posX = Math.round(pos * 1000);
+	visualizer.beginPath();
+	visualizer.moveTo(posX, 0);
+	visualizer.strokeStyle = accentColor;
+	visualizer.lineTo(posX, 100);
+	visualizer.stroke();
+
+	requestAnimationFrame(updateVisualization);
+}
+
 setTimeout(updateParameters, 10);
+requestAnimationFrame(updateVisualization);
