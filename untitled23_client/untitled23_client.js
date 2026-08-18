@@ -3,6 +3,7 @@
 let start_pos = 0.0;
 let end_pos = 1.0;
 let zoom = 3.0;
+let timepos = 0.0;
 let narrow_intensity = 0.0;
 let silence = 0;
 
@@ -197,8 +198,10 @@ function lerpList(v, ilist, olist) {
 }
 
 function updateParameters() {
-	// find position from 0 to 1 based on current time and zoom
-	let timepos = ((Date.now() / 1000) % zoom) / zoom;
+
+	// update position, assuming it's been 10 milliseconds since last time
+	// zoom is number of seconds for full loop, so should update by 10 / (zoom * 1000)
+	timepos = (timepos + (10.0 / (zoom * 1000))) % 1.0;
 	
 	// convert that time to be within the current start and end
 	let pos = lerp(timepos, 0, 1, start_pos, end_pos);
@@ -238,9 +241,6 @@ function updateParameters() {
 }
 
 function updateVisualization(timestamp) {
-	
-	// find position from 0 to 1 based on current time and zoom
-	let timepos = ((Date.now() / 1000) % zoom) / zoom;
 	
 	// convert that time to be within the current start and end
 	let pos = lerp(timepos, 0, 1, start_pos, end_pos);
