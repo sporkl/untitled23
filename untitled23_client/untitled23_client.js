@@ -114,7 +114,7 @@ function receiveMessage(m) {
 	start_pos = data.start_pos / 1000;
 	end_pos = data.end_pos / 1000;
 	silence = data.silence;
-	document.getElementById("zoom").textContent = "Zoom: " + zoom.toFixed(1);
+	document.getElementById("zoom").textContent = "Time: " + zoom.toFixed(1);
 	document.getElementById("start_pos").textContent = "Start: " + start_pos.toFixed(3);
 	document.getElementById("end_pos").textContent = "End: " + end_pos.toFixed(3);
 }
