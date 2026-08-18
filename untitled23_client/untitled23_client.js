@@ -121,6 +121,13 @@ function receiveMessage(m) {
 
 ws.onmessage = receiveMessage;
 
+function onCloseOrError(e) {
+	silence = 1;
+}
+
+ws.onclose = onCloseOrError;
+ws.onerror = onCloseOrError;
+
 function sendIncrZoom() {
 	ws.send("/u23/zoom/incr");
 	soundPing();
